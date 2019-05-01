@@ -1,0 +1,39 @@
+## roles/ansible-role-fonts/tasks/main.yml
+# vim:ft=yaml.ansible:
+---
+- name: "Are powerline fonts installed?"
+  stat:
+    path: '/home/{{ i3user }}/.local/share/fonts/Anonymice Powerline.ttf'
+  register: plfonts_check
+  ignore_errors: yes
+  tags: appearance
+
+- name: "Ensure git is installed"
+  dnf:
+    name: git
+    state: present
+
+- name: "Clone powerline-fonts (git)"
+  become: true
+  become_user: '{{ i3user }}'
+  git:
+    repo: 'https://github.com/powerline/fonts.git'
+    dest: /tmp/fonts
+    clone: yes
+  when: plfonts_check.stat.exists == False
+  ignore_errors: yes
+  tags: appearance
+
+- name: "Install powerline-fonts"
+  become: true
+  become_user: '{{ i3user }}'
+  command: /tmp/fonts/install.sh
+  when: plfonts_check.stat.exists == False
+  tags: appearance
+
+- name: "Remove fonts install file"
+  file:
+    path: /tmp/fonts
+    state: absent
+
+...
